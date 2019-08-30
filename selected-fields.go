@@ -4,7 +4,7 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 )
 
-// GetSelectedFields получение списка передаваемых полей в graphql
+// GetSelectedFields getting list of passed fields in graphql
 func GetSelectedFields(selectionPath []string, fields []*ast.Field) []string {
 	var collect []string
 	for _, propName := range selectionPath {
