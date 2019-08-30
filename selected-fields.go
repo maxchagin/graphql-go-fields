@@ -1,4 +1,4 @@
-package gofields
+package graphqlfields
 
 import (
 	"github.com/graphql-go/graphql/language/ast"
