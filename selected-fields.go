@@ -5,6 +5,7 @@ import (
 )
 
 // GetSelectedFields getting list of passed fields in graphql
+// https://github.com/graphql-go/graphql/issues/157
 func GetSelectedFields(selectionPath []string, fields []*ast.Field) []string {
 	var collect []string
 	for _, propName := range selectionPath {
