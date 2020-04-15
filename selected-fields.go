@@ -44,7 +44,7 @@ func GetSelectedFields(selectionPath []string, info graphql.ResolveInfo) []strin
 			return collect
 		}
 	}
-	// добавляем id, так как он всегда требуется для подзапров
+	// add id, as it is always required for subqueries
 	collect = append(collect, "id")
 	return collect
 }
