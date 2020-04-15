@@ -6,16 +6,16 @@ import (
 
 // GetSelectedFields getting list of passed fields in graphql
 // https://github.com/graphql-go/graphql/issues/157
-func GetSelectedFields(selectionPath []string, fields []*ast.Field) []string {
+func GetSelectedFields(selectionPath []string, astfields []*ast.Field) []string {
 	var collect []string
+	var fields = make([]ast.Selection, 0)
 	for _, propName := range selectionPath {
 		found := false
-		for _, field := range fields {
+		for _, field := range astfields {
 			if field.Name.Value == propName {
 				selections := field.SelectionSet.Selections
-				fields = make([]*ast.Field, 0)
 				for _, selection := range selections {
-					fields = append(fields, selection.(*ast.Field))
+					fields = append(fields, selection)
 				}
 				found = true
 				break
@@ -27,15 +27,20 @@ func GetSelectedFields(selectionPath []string, fields []*ast.Field) []string {
 	}
 
 	for _, field := range fields {
-		name := field.Name.Value
-		// исключаем поля (id будет добавлен ниже, принудительно)
+		var name string
+		switch value := field.(type) {
+		case *ast.Field:
+			name = value.Name.Value
+		case *ast.FragmentSpread:
+			name = value.Name.Value
+		}
+		// exclude fields (id will be added below, forced)
 		if name == "id" || name == "__typename" {
 			continue
 		}
-		collect = append(collect, field.Name.Value)
+		collect = append(collect, name)
 	}
-	// добавляем id, так как он всегда требуется для подзапров
+	// add id, as it is always required for subqueries
 	collect = append(collect, "id")
-
 	return collect
 }
