@@ -6,16 +6,34 @@ import (
 
 // GetSelectedFields getting list of passed fields in graphql
 // https://github.com/graphql-go/graphql/issues/157
-func GetSelectedFields(selectionPath []string, astfields []*ast.Field) []string {
-	var collect []string
-	var fields = make([]ast.Selection, 0)
+func GetSelectedFields(selectionPath []string, info graphql.ResolveInfo) []string {
+	fields := info.FieldASTs
+	var collect, collectFragment []string
+
+	if len(info.Fragments) != 0 {
+		for _, fragment := range info.Fragments {
+			for _, selection := range fragment.GetSelectionSet().Selections {
+				collectFragment = append(collectFragment, selection.(*ast.Field).Name.Value)
+			}
+		}
+	}
 	for _, propName := range selectionPath {
 		found := false
-		for _, field := range astfields {
+		collect = collectFragment
+		for _, field := range fields {
 			if field.Name.Value == propName {
 				selections := field.SelectionSet.Selections
+				fields = make([]*ast.Field, 0)
 				for _, selection := range selections {
-					fields = append(fields, selection)
+					switch value := selection.(type) {
+					case *ast.Field:
+						fields = append(fields, value)
+						name := value.Name.Value
+						if name == "__typename" || name == "id" {
+							continue
+						}
+						collect = append(collect, value.Name.Value)
+					}
 				}
 				found = true
 				break
@@ -25,22 +43,7 @@ func GetSelectedFields(selectionPath []string, astfields []*ast.Field) []string 
 			return collect
 		}
 	}
-
-	for _, field := range fields {
-		var name string
-		switch value := field.(type) {
-		case *ast.Field:
-			name = value.Name.Value
-		case *ast.FragmentSpread:
-			name = value.Name.Value
-		}
-		// exclude fields (id will be added below, forced)
-		if name == "id" || name == "__typename" {
-			continue
-		}
-		collect = append(collect, name)
-	}
-	// add id, as it is always required for subqueries
+	// добавляем id, так как он всегда требуется для подзапров
 	collect = append(collect, "id")
 	return collect
 }
